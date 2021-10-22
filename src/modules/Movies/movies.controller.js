@@ -8,7 +8,6 @@ import {ALREADY_EXISTS, USER_ROLES} from "../../appConfig/constants";
 class MoviesController {
     async getMovies({ user }, res, next) {
         try {
-            console.log("hayahuuuu")
             const movies = await Movie.find({ userId: user.userId }).lean();
             res.status(SUCCESS_CODE).send({ movies });
         } catch (e) {
