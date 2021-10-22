@@ -34,4 +34,4 @@ jobs:
         env:
           CI: true
           MONGO_CONNECTION_STRING: mongodb://localhost:27017/netguru
-          OMDB_API_KEY:2d8d9167
+          OMDB_API_KEY: 2d8d9167
