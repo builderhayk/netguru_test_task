@@ -1,0 +1,24 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+        "ecmaVersion": 2021,
+        "sourceType": "module"
+    },
+    "rules": {
+        "semi": ["error", "always", {"omitLastInOneLineBlock":  true}],
+        "quotes": ["error", "double"],
+        "camelcase": "off",
+        "no-async-promise-executor": "off",
+        "curly": [
+            "error",
+            "all"
+        ],
+        "no-console": "error",
+        "no-prototype-builtins": "off",
+        "object-curly-spacing": ["error", "always"]
+    }
+}
