@@ -16,3 +16,5 @@ export const USER_ROLES = {
     BASIC: "basic",
     PREMIUM: "premium",
 };
+
+export const NOT_ALLOWED_TO_CREATE_MOVIE = "Basic users are not allowed to create more than 5 movies per month";

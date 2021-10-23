@@ -2,17 +2,24 @@ import chai from "chai";
 import chaiHttp from "chai-http";
 import auth from "../src/middlewares/auth";
 import sinon from "sinon";
-import { describe, it, beforeEach, afterEach, before, after } from "mocha";
+import { after, afterEach, before, beforeEach, describe, it } from "mocha";
 import {
-    createMovie,
-    deleteMovies,
     mockMovieTitle,
-    mockUserId, MOVIE_ALREADY_EXISTS_RESPONSE,
-    NO_AUTH_TOKEN_ERROR_RESPONSE
-} from "./__seeds__/moviesApi.fixture";
-import {BAD_REQUEST_CODE, SUCCESS_CODE, UNAUTHORIZED_CODE} from "../src/appConfig/status-codes";
-import { REQUIRED } from "../src/appConfig/constants";
-import {AuthError, BadRequest} from "../src/appConfig/errors";
+    mockUserId,
+    MOVIE_ALREADY_EXISTS_RESPONSE,
+    moviesTitles,
+    NO_AUTH_TOKEN_ERROR_RESPONSE,
+    NOT_ALLOWED_TO_CREATE_MOVIE_RESPONSE_OBJ
+} from "./moviesApi.fixture";
+import { createMovie, deleteMovies, stubAuthMiddleware } from "./__seeds__/movies.seeds";
+import {
+    BAD_REQUEST_CODE,
+    CREATED_CODE,
+    FORBIDDEN_CODE,
+    SUCCESS_CODE,
+    UNAUTHORIZED_CODE
+} from "../src/appConfig/status-codes";
+import { NOT_ALLOWED_TO_CREATE_MOVIE } from "../src/appConfig/constants";
 
 chai.should();
 
@@ -21,23 +28,8 @@ chai.use(chaiHttp);
 
 describe("GET /movies", () => {
     beforeEach(async (done) => {
-
         const authStub = sinon.stub(auth, "authMiddleware");
-        authStub.callsFake(function (req, res, next) {
-            try {
-                const authHeaderContent = req.headers["authorization"];
-                if (!authHeaderContent) {
-                    throw new Error(REQUIRED("Authorization Header"));
-                }
-                req.user = {
-                    userId: 114419845,
-                    role: authHeaderContent.split(" ")[1] === "basic" ? "basic" : "premium",
-                };
-                next();
-            } catch (e) {
-                next(new AuthError(e.message));
-            }
-        });
+        authStub.callsFake(stubAuthMiddleware);
         done();
     });
 
@@ -48,7 +40,7 @@ describe("GET /movies", () => {
 
     before(async () => {
         return new Promise( async function (resolve) {
-            await createMovie({ title: mockMovieTitle, userId: mockUserId });
+            // await createMovie({ title: mockMovieTitle, userId: mockUserId });
             resolve();
         });
     });
@@ -64,7 +56,7 @@ describe("GET /movies", () => {
         const { server } = require("../src");
         chai.request(server.app)
             .get("/api/movies")
-            .end((err, response) => {
+            .end((_, response) => {
                 response.should.have.status(UNAUTHORIZED_CODE);
                 response.body.should.be.a("object");
                 response.body.should.be.deep.equal(NO_AUTH_TOKEN_ERROR_RESPONSE);
@@ -72,13 +64,27 @@ describe("GET /movies", () => {
             });
     });
 
+    it("Should successfully create a movie", (done) => {
+        const { server } = require("../src");
+        chai.request(server.app)
+            .post("/api/movies")
+            .set("authorization", "Bearer simple")
+            .send({ title: "Venom" })
+            .end((_, response) => {
+                response.should.have.status(CREATED_CODE);
+                response.body.should.be.a("object");
+                response.body.title.should.be.equal(mockMovieTitle);
+                response.body.userId.should.be.equal(mockUserId);
+                done();
+            });
+    });
 
     it("Should return movies of user", (done) => {
         const { server } = require("../src");
         chai.request(server.app)
             .get("/api/movies")
             .set("authorization", "Bearer simple")
-            .end((err, request) => {
+            .end((_, request) => {
                 request.should.have.status(SUCCESS_CODE);
                 request.body.should.be.a("object");
                 request.body.movies[0].title.should.be.equal(mockMovieTitle);
@@ -99,6 +105,31 @@ describe("GET /movies", () => {
                 response.body.should.be.deep.equal(MOVIE_ALREADY_EXISTS_RESPONSE);
                 done();
             });
+    });
+
+    it(`Should throw ${NOT_ALLOWED_TO_CREATE_MOVIE}`, () => {
+        const { server } = require("../src");
+        return new Promise(async (resolve) => {
+            await Promise.all(moviesTitles.map(movieTitle => {
+                return createMovie({
+                    userId: mockUserId,
+                    title: movieTitle
+                });
+            }));
+            chai.request(server.app)
+                .post("/api/movies")
+                .set("authorization", "Bearer basic")
+                .send({ title: "Batman" })
+                .end((err, response) => {
+                    // const movies=await Movie.find({userId: mockUserId});
+                    // console.log(movies);
+                    response.should.have.status(FORBIDDEN_CODE);
+                    response.body.should.be.a("object");
+                    response.body.should.be.deep.equal(NOT_ALLOWED_TO_CREATE_MOVIE_RESPONSE_OBJ);
+                    resolve();
+                });
+        });
+
     });
 
 });

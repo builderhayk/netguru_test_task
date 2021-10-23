@@ -2,13 +2,12 @@ import { CREATED_CODE, SUCCESS_CODE } from "../../appConfig/status-codes";
 import mongoose from "mongoose";
 const Movie = mongoose.model("Movie");
 import MovieService from "../../services/movie.service";
-import {BadRequest, Forbidden} from "../../appConfig/errors";
-import {ALREADY_EXISTS, USER_ROLES} from "../../appConfig/constants";
+import { BadRequest, Forbidden } from "../../appConfig/errors";
+import { ALREADY_EXISTS, NOT_ALLOWED_TO_CREATE_MOVIE, USER_ROLES } from "../../appConfig/constants";
 
 class MoviesController {
     async getMovies({ user }, res, next) {
         try {
-            console.log("hayahuuuu")
             const movies = await Movie.find({ userId: user.userId }).lean();
             res.status(SUCCESS_CODE).send({ movies });
         } catch (e) {
@@ -20,7 +19,6 @@ class MoviesController {
         try {
             const { title } = body;
             const movie = await MovieService.getMovieByTitle(title);
-
             if (user.role === USER_ROLES.BASIC) {
                 const oneMonthSubtracted = new Date(new Date().setMonth(new Date().getMonth() - 1));
                 const moviesCountPerThisMonth = await Movie.countDocuments({
@@ -30,7 +28,7 @@ class MoviesController {
                     }
                 });
                 if (moviesCountPerThisMonth > 4) {
-                    throw new Forbidden("Basic users are not allowed to create more than 5 movies per month");
+                    throw new Forbidden(NOT_ALLOWED_TO_CREATE_MOVIE);
                 }
             }
             const movieExists = await Movie.findOne({ title: movie.Title }).lean();
