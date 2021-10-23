@@ -121,8 +121,6 @@ describe("GET /movies", () => {
                 .set("authorization", "Bearer basic")
                 .send({ title: "Batman" })
                 .end((err, response) => {
-                    // const movies=await Movie.find({userId: mockUserId});
-                    // console.log(movies);
                     response.should.have.status(FORBIDDEN_CODE);
                     response.body.should.be.a("object");
                     response.body.should.be.deep.equal(NOT_ALLOWED_TO_CREATE_MOVIE_RESPONSE_OBJ);

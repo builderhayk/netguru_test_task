@@ -22,6 +22,7 @@ class MoviesController {
             if (user.role === USER_ROLES.BASIC) {
                 const oneMonthSubtracted = new Date(new Date().setMonth(new Date().getMonth() - 1));
                 const moviesCountPerThisMonth = await Movie.countDocuments({
+                    userId: user.userId,
                     createdAt: {
                         $gte:new Date(oneMonthSubtracted),
                         $lt: new Date()
@@ -31,7 +32,7 @@ class MoviesController {
                     throw new Forbidden(NOT_ALLOWED_TO_CREATE_MOVIE);
                 }
             }
-            const movieExists = await Movie.findOne({ title: movie.Title }).lean();
+            const movieExists = await Movie.findOne({ title: movie.Title, userId: user.userId }).lean();
             if (movieExists) {
                 throw new BadRequest(ALREADY_EXISTS(title));
             }
