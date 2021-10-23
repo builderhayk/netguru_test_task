@@ -11,11 +11,11 @@ export default {
                 in: "body",
                 trim: true,
                 isLength: {
-                    errorMessage: INVALID("title"),
+                    errorMessage: INVALID("Title"),
                     options: { min: 2, max: 55 }
                 },
                 notEmpty: {
-                    errorMessage: REQUIRED("title")
+                    errorMessage: REQUIRED("Title")
                 },
             }
         }

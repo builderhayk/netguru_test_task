@@ -9,7 +9,7 @@ import {
     MOVIE_ALREADY_EXISTS_RESPONSE,
     moviesTitles,
     NO_AUTH_TOKEN_ERROR_RESPONSE,
-    NOT_ALLOWED_TO_CREATE_MOVIE_RESPONSE_OBJ
+    NOT_ALLOWED_TO_CREATE_MOVIE_RESPONSE_OBJ, VALIDATION_ERROR_EXAMPLE
 } from "./moviesApi.fixture";
 import { createMovie, deleteMovies, stubAuthMiddleware } from "./__seeds__/movies.seeds";
 import {
@@ -17,7 +17,7 @@ import {
     CREATED_CODE,
     FORBIDDEN_CODE,
     SUCCESS_CODE,
-    UNAUTHORIZED_CODE
+    UNAUTHORIZED_CODE, VALIDATION_ERROR_CODE
 } from "../src/appConfig/status-codes";
 import { NOT_ALLOWED_TO_CREATE_MOVIE } from "../src/appConfig/constants";
 
@@ -100,9 +100,24 @@ describe("GET /movies", () => {
             .set("authorization", "Bearer simple")
             .send({ title: "Venom" })
             .end((err, response) => {
+                console.log({ response });
                 response.should.have.status(BAD_REQUEST_CODE);
                 response.body.should.be.a("object");
                 response.body.should.be.deep.equal(MOVIE_ALREADY_EXISTS_RESPONSE);
+                done();
+            });
+    });
+
+    it("Should throw  validation error", (done) => {
+        const { server } = require("../src");
+        chai.request(server.app)
+            .post("/api/movies")
+            .set("authorization", "Bearer simple")
+            .send({ title: "V" })
+            .end((err, response) => {
+                response.should.have.status(VALIDATION_ERROR_CODE);
+                response.body.should.be.a("object");
+                response.body.should.be.deep.equal(VALIDATION_ERROR_EXAMPLE);
                 done();
             });
     });
