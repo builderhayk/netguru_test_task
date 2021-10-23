@@ -5,7 +5,7 @@
 ## Running Locally
 
 Make sure you have Docker and Docker compose installed.
-After cloning copy .env.example code to .env file
+After cloning copy *.env.example* code to *.env* file
 
 Then run this command to make docker container with app and run.
 
